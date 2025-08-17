@@ -1,29 +1,39 @@
 {
   "name": "@webmcp-userscripts/shared",
   "version": "1.0.0",
-  "description": "Shared types and utilities for MCP-B injection scripts",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dom": {
+      "import": "./dist/dom.js",
+      "types": "./dist/dom.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
     }
   },
   "scripts": {
-    "build": "tsc",
-    "type-check": "tsc --noEmit"
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "biome lint .",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "@mcp-b/transports": "^1.0.2",
+    "@testing-library/user-event": "^14.5.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.4.3",
-    "@modelcontextprotocol/sdk": "^1.17.0",
-    "@types/tampermonkey": "^5.0.3"
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.3"
   }
 }

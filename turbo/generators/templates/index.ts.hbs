@@ -1,0 +1,18 @@
+import { createServer, formatSuccess, formatError } from '@webmcp-userscripts/shared/server';
+import {
+  clickElement,
+  typeText,
+  waitForSelector,
+  getElementText,
+  getAllElements,
+  isElementVisible
+} from '@webmcp-userscripts/shared/dom';
+import { z } from 'zod';
+
+  const server = await createServer({
+    name: '{{displayName}}',
+    version: '1.0.0',
+  });
+
+
+  console.log('{{displayName}} initialized successfully');

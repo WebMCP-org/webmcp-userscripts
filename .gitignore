@@ -54,3 +54,6 @@ temp/
 
 # Biome
 .biome-cache/
+
+# Turbo
+.turbo/

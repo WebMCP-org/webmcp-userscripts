@@ -1,11 +1,15 @@
 // ==UserScript==
-// @name       Hacker News MCP-B Integration
-// @namespace  https://github.com/WebMCP-org/webmcp-userscripts
-// @version    1.0.0
-// @author     monkey
-// @match      https://news.ycombinator.com/*
-// @grant      GM.info
-// @grant      unsafeWindow
+// @name         Hacker News MCP-B Injector
+// @namespace    https://github.com/WebMCP-org/webmcp-userscripts
+// @version      1.0.0
+// @author       Alex Nahas
+// @description  Injects an MCP-B server into Hacker News to read posts and click into them
+// @license      MIT
+// @homepageURL  https://github.com/WebMCP-org/webmcp-userscripts
+// @supportURL   https://github.com/WebMCP-org/webmcp-userscripts/issues
+// @match        https://news.ycombinator.com/*
+// @grant        GM.info
+// @grant        unsafeWindow
 // ==/UserScript==
 
 (function () {
@@ -4701,7 +4705,7 @@
     }
   }
   var _ = ((n) => (n.START = "start", n.STARTED = "started", n.STOP = "stop", n.STOPPED = "stopped", n.PING = "ping", n.PONG = "pong", n.ERROR = "error", n.LIST_TOOLS = "list_tools", n.CALL_TOOL = "call_tool", n.TOOL_LIST_UPDATED = "tool_list_updated", n.TOOL_LIST_UPDATED_ACK = "tool_list_updated_ack", n.PROCESS_DATA = "process_data", n.SERVER_STARTED = "server_started", n.SERVER_STOPPED = "server_stopped", n.ERROR_FROM_NATIVE_HOST = "error_from_native_host", n.CONNECT_NATIVE = "connectNative", n.PING_NATIVE = "ping_native", n.DISCONNECT_NATIVE = "disconnect_native", n))(_ || {});
-  var h = class {
+  var p = class {
     constructor(e) {
       __publicField(this, "_started", false);
       __publicField(this, "_allowedOrigins");
@@ -6479,12 +6483,12 @@
     return v;
   }
   function resolveSchema(root, ref2) {
-    var p = URI$1.parse(ref2), refPath = _getFullPath(p), baseId = getFullPath(this._getId(root.schema));
+    var p2 = URI$1.parse(ref2), refPath = _getFullPath(p2), baseId = getFullPath(this._getId(root.schema));
     if (Object.keys(root.schema).length === 0 || refPath !== baseId) {
       var id = normalizeId(refPath);
       var refVal = this._refs[id];
       if (typeof refVal == "string") {
-        return resolveRecursive.call(this, root, refVal, p);
+        return resolveRecursive.call(this, root, refVal, p2);
       } else if (refVal instanceof SchemaObject$1) {
         if (!refVal.validate) this._compile(refVal);
         root = refVal;
@@ -6502,7 +6506,7 @@
       if (!root.schema) return;
       baseId = getFullPath(this._getId(root.schema));
     }
-    return getJsonPointer.call(this, p, baseId, root.schema, root);
+    return getJsonPointer.call(this, p2, baseId, root.schema, root);
   }
   function resolveRecursive(root, ref2, parsedRef) {
     var res = resolveSchema.call(this, root, ref2);
@@ -6607,11 +6611,11 @@
   }
   function getFullPath(id, normalize) {
     if (normalize !== false) id = normalizeId(id);
-    var p = URI$1.parse(id);
-    return _getFullPath(p);
+    var p2 = URI$1.parse(id);
+    return _getFullPath(p2);
   }
-  function _getFullPath(p) {
-    return URI$1.serialize(p).split("#")[0] + "#";
+  function _getFullPath(p2) {
+    return URI$1.serialize(p2).split("#")[0] + "#";
   }
   var TRAILING_SLASH_HASH = /#\/?$/;
   function normalizeId(id) {
@@ -9232,8 +9236,8 @@
     if ($required && !(it.opts.$data && $required.$data) && $required.length < it.opts.loopRequired) {
       var $requiredHash = it.util.toHash($required);
     }
-    function notProto(p) {
-      return p !== "__proto__";
+    function notProto(p2) {
+      return p2 !== "__proto__";
     }
     out += "var " + $errs + " = errors;var " + $nextValid + " = true;";
     if ($ownProperties) {
@@ -10094,19 +10098,19 @@
       callback = meta;
       meta = void 0;
     }
-    var p = loadMetaSchemaOf(schema).then(function() {
+    var p2 = loadMetaSchemaOf(schema).then(function() {
       var schemaObj = self2._addSchema(schema, void 0, meta);
       return schemaObj.validate || _compileAsync(schemaObj);
     });
     if (callback) {
-      p.then(
+      p2.then(
         function(v) {
           callback(null, v);
         },
         callback
       );
     }
-    return p;
+    return p2;
     function loadMetaSchemaOf(sch) {
       var $schema2 = sch.$schema;
       return $schema2 && !self2.getSchema($schema2) ? compileAsync.call(self2, { $ref: $schema2 }, true) : Promise.resolve();
@@ -13130,353 +13134,202 @@
       hasMore: false
     }
   };
-  const SELECTORS = {
-    // Story elements
-    STORY_ROW: ".athing",
-    STORY_RANK: ".rank",
-    STORY_TITLE: ".titleline > a",
-    STORY_DOMAIN: ".titleline .sitebit",
-    VOTE_LINK: ".votearrow",
-    // Metadata elements (in subtext row)
-    SUBTEXT: ".subtext",
-    SCORE: ".score",
-    USER_LINK: ".hnuser",
-    AGE_LINK: ".age",
-    HIDE_LINK: 'a:has-text("hide")',
-    COMMENTS_LINK: (storyId) => `a[href="item?id=${storyId}"]:has-text("comment")`,
-    // Navigation
-    NAV_LINKS: ".pagetop a",
-    NAV_NEW: 'a[href="newest"]',
-    NAV_PAST: 'a[href="front"]',
-    NAV_ASK: 'a[href="ask"]',
-    NAV_SHOW: 'a[href="show"]',
-    NAV_JOBS: 'a[href="jobs"]',
-    // Search
-    SEARCH_INPUT: 'input[name="q"]',
-    // Comments page
-    COMMENT_FORM: 'form textarea[name="text"]',
-    COMMENT_SUBMIT: 'input[type="submit"][value*="add comment"]',
-    COMMENT_TEXT: ".comment",
-    COMMENT_USER: ".comhead .hnuser",
-    // More link
-    MORE_LINK: "a.morelink",
-    // User page
-    USER_PROFILE: ".profile",
-    USER_KARMA: 'td:has-text("karma:") + td',
-    USER_CREATED: 'td:has-text("created:") + td',
-    // Submit page
-    SUBMIT_TITLE: 'input[name="title"]',
-    SUBMIT_URL: 'input[name="url"]',
-    SUBMIT_TEXT: 'textarea[name="text"]'
-  };
-  function simulateClick(element) {
-    const mouseEvent = new MouseEvent("click", {
-      view: window,
-      bubbles: true,
-      cancelable: true
-    });
-    element.dispatchEvent(mouseEvent);
+  function log(level, message, ...args) {
+    console.log(`[HN MCP Server] ${level}: ${message}`, ...args);
   }
-  function getStoryData() {
-    const stories = Array.from(document.querySelectorAll(SELECTORS.STORY_ROW));
-    return stories.map((story, index) => {
-      var _a, _b, _c, _d, _e;
-      const id = story.id;
-      const rank = ((_a = story.querySelector(SELECTORS.STORY_RANK)) == null ? void 0 : _a.textContent) || "";
-      const titleElement = story.querySelector(SELECTORS.STORY_TITLE);
-      const title2 = (titleElement == null ? void 0 : titleElement.textContent) || "";
-      const url = (titleElement == null ? void 0 : titleElement.href) || "";
-      const nextRow = story.nextElementSibling;
-      const subtext = nextRow == null ? void 0 : nextRow.querySelector(SELECTORS.SUBTEXT);
-      const points = ((_b = subtext == null ? void 0 : subtext.querySelector(SELECTORS.SCORE)) == null ? void 0 : _b.textContent) || "0 points";
-      const user = ((_c = subtext == null ? void 0 : subtext.querySelector(SELECTORS.USER_LINK)) == null ? void 0 : _c.textContent) || "";
-      const age = ((_d = subtext == null ? void 0 : subtext.querySelector(SELECTORS.AGE_LINK)) == null ? void 0 : _d.textContent) || "";
-      const commentsLink = subtext == null ? void 0 : subtext.querySelector(`a[href*="item?id=${id}"]`);
-      const commentsText = (commentsLink == null ? void 0 : commentsLink.textContent) || "0 comments";
-      const commentsCount = parseInt(((_e = commentsText.match(/\d+/)) == null ? void 0 : _e[0]) || "0");
+  class HackerNewsMcpServer {
+    constructor() {
+      this.initialized = false;
+      this.server = new McpServer(
+        { name: "Hacker News MCP Server", version: "1.0.0" },
+        {
+          capabilities: { tools: { listChanged: true } },
+          instructions: "Tools for reading Hacker News front page posts and clicking into a post."
+        }
+      );
+      this.server.registerTool(
+        "hn_get_page_title",
+        {
+          title: "Get Page Title",
+          description: "Return document.title",
+          inputSchema: {}
+        },
+        async () => this.format(document.title)
+      );
+      this.transport = new p({ allowedOrigins: ["*"] });
+      void this.init();
+    }
+    format(data2) {
       return {
-        id,
-        rank,
-        title: title2,
-        url,
-        points,
-        user,
-        age,
-        comments: commentsCount,
-        commentsUrl: `https://news.ycombinator.com/item?id=${id}`
+        content: [
+          {
+            type: "text",
+            text: typeof data2 === "string" ? data2 : JSON.stringify(data2, null, 2)
+          }
+        ]
       };
-    });
+    }
+    formatError(error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [{ type: "text", text: `Error: ${message}` }],
+        isError: true
+      };
+    }
+    parseFrontPage(maxResults = 30) {
+      var _a, _b, _c, _d, _e;
+      const rows = Array.from(document.querySelectorAll("tr.athing"));
+      const posts = [];
+      let position = 0;
+      for (const row of rows) {
+        const id = row.getAttribute("id");
+        const titleAnchor = row.querySelector(".titleline a") || row.querySelector("a.storylink");
+        if (!titleAnchor) continue;
+        const siteEl = row.querySelector(".sitestr");
+        const subtextRow = row.nextElementSibling;
+        const subtext = subtextRow == null ? void 0 : subtextRow.querySelector(".subtext");
+        const scoreText = ((_a = subtext == null ? void 0 : subtext.querySelector(".score")) == null ? void 0 : _a.textContent) || null;
+        const score = scoreText ? Number.parseInt(scoreText, 10) : null;
+        const commentAnchorCandidates = subtext ? Array.from(subtext.querySelectorAll("a")) : [];
+        const commentsAnchor = commentAnchorCandidates.reverse().find((a) => /comment/i.test(a.textContent || "")) || null;
+        let commentsCount = null;
+        if (commentsAnchor) {
+          const match = (commentsAnchor.textContent || "").match(/(\d+)\s+comment/);
+          commentsCount = match ? Number.parseInt(match[1], 10) : 0;
+        }
+        const author = ((_b = subtext == null ? void 0 : subtext.querySelector(".hnuser")) == null ? void 0 : _b.textContent) || null;
+        const age = ((_c = subtext == null ? void 0 : subtext.querySelector(".age")) == null ? void 0 : _c.textContent) || null;
+        position += 1;
+        posts.push({
+          position,
+          id: id || null,
+          title: ((_d = titleAnchor.textContent) == null ? void 0 : _d.trim()) || titleAnchor.title || titleAnchor.href,
+          url: titleAnchor.href,
+          site: ((_e = siteEl == null ? void 0 : siteEl.textContent) == null ? void 0 : _e.trim()) || null,
+          score,
+          commentsCount,
+          author,
+          age
+        });
+        if (posts.length >= maxResults) break;
+      }
+      return posts;
+    }
+    async init() {
+      try {
+        await this.server.connect(this.transport);
+        this.server.registerTool(
+          "hn_get_posts",
+          {
+            title: "HN Get Posts",
+            description: "Read Hacker News front-page posts (title, url, id, site, score, commentsCount, author, age)",
+            inputSchema: {
+              maxResults: numberType().int().min(1).max(100).optional().describe("Maximum number of posts to return (default 30)")
+            },
+            annotations: { readOnlyHint: true, idempotentHint: true }
+          },
+          async ({ maxResults }) => {
+            try {
+              const posts = this.parseFrontPage(maxResults ?? 30);
+              return this.format({ posts, count: posts.length, href: window.location.href });
+            } catch (e) {
+              return this.formatError(e);
+            }
+          }
+        );
+        this.server.registerTool(
+          "hn_click_post",
+          {
+            title: "HN Click Post",
+            description: "Click/navigate into a Hacker News post by index (1-based), id, or matching title text",
+            inputSchema: {
+              index: numberType().int().min(1).optional().describe("1-based index of the post on the page"),
+              id: stringType().optional().describe("The post id (tr.athing id)"),
+              titleIncludes: stringType().optional().describe("Case-insensitive substring to match post title")
+            },
+            annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true }
+          },
+          async ({
+            index,
+            id,
+            titleIncludes
+          }) => {
+            try {
+              let anchor = null;
+              if (id) {
+                const row = document.querySelector(`tr.athing[id="${CSS.escape(id)}"]`);
+                anchor = (row == null ? void 0 : row.querySelector(".titleline a")) || (row == null ? void 0 : row.querySelector("a.storylink"));
+              }
+              if (!anchor && typeof index === "number") {
+                const rows = Array.from(
+                  document.querySelectorAll("tr.athing")
+                );
+                const row = rows[index - 1];
+                if (row) {
+                  anchor = row.querySelector(".titleline a") || row.querySelector("a.storylink");
+                }
+              }
+              if (!anchor && titleIncludes) {
+                const allAnchors = Array.from(
+                  document.querySelectorAll("tr.athing .titleline a, tr.athing a.storylink")
+                );
+                const needle = titleIncludes.toLowerCase();
+                anchor = allAnchors.find((a) => (a.textContent || "").toLowerCase().includes(needle)) || null;
+              }
+              if (!anchor) {
+                return this.formatError(
+                  "Could not find a matching post. Provide id, index, or titleIncludes."
+                );
+              }
+              const href = anchor.href;
+              anchor.click();
+              if (href) {
+                setTimeout(() => {
+                  if (location.href === href) return;
+                  try {
+                    window.location.href = href;
+                  } catch {
+                  }
+                }, 100);
+              }
+              return this.format({ navigated: true, href });
+            } catch (e) {
+              return this.formatError(e);
+            }
+          }
+        );
+        this.initialized = true;
+        log("info", "Hacker News MCP Server initialized");
+      } catch (e) {
+        log("error", "Failed to initialize Hacker News MCP Server", e);
+      }
+    }
+    isInitialized() {
+      return this.initialized;
+    }
   }
-  async function setupMcpServer() {
-    console.log("[HackerNews MCP] Initializing server...");
-    const server2 = new McpServer({
-      name: "hackernews-mcp",
-      vendor: "webmcp",
-      version: "1.0.0"
-    });
-    server2.registerTool(
-      "hackernews_get_stories",
-      {
-        description: "Get the current stories from Hacker News front page",
-        inputSchema: {
-          limit: numberType().optional().describe("Maximum number of stories to return (default: 30)")
-        }
-      },
-      async (params) => {
-        try {
-          const stories = getStoryData();
-          const limit = params.limit || 30;
-          const limitedStories = stories.slice(0, limit);
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify(limitedStories, null, 2)
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error getting stories: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_navigate",
-      {
-        description: "Navigate to different sections of Hacker News",
-        inputSchema: {
-          section: enumType(["new", "past", "comments", "ask", "show", "jobs", "submit"]).describe("The section to navigate to")
-        }
-      },
-      async (params) => {
-        try {
-          const sectionMap = {
-            new: "newest",
-            past: "front",
-            comments: "newcomments",
-            ask: "ask",
-            show: "show",
-            jobs: "jobs",
-            submit: "submit"
-          };
-          const path = sectionMap[params.section];
-          window.location.href = `https://news.ycombinator.com/${path}`;
-          return {
-            content: [{
-              type: "text",
-              text: `Navigating to ${params.section} section...`
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error navigating: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_search",
-      {
-        description: "Search Hacker News using the search box",
-        inputSchema: {
-          query: stringType().describe("The search query")
-        }
-      },
-      async (params) => {
-        var _a;
-        try {
-          const searchInput = document.querySelector(SELECTORS.SEARCH_INPUT);
-          if (!searchInput) {
-            throw new Error("Search input not found");
-          }
-          searchInput.value = params.query;
-          (_a = searchInput.form) == null ? void 0 : _a.submit();
-          return {
-            content: [{
-              type: "text",
-              text: `Searching for: ${params.query}`
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error searching: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_open_comments",
-      {
-        description: "Open the comments page for a story",
-        inputSchema: {
-          storyId: stringType().describe("The ID of the story")
-        }
-      },
-      async (params) => {
-        try {
-          window.location.href = `https://news.ycombinator.com/item?id=${params.storyId}`;
-          return {
-            content: [{
-              type: "text",
-              text: `Opening comments for story ${params.storyId}...`
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error opening comments: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_get_comments",
-      {
-        description: "Get comments from the current comment page",
-        inputSchema: {}
-      },
-      async () => {
-        try {
-          const comments = Array.from(document.querySelectorAll(".comment")).map((comment2) => {
-            var _a, _b;
-            const commentElement = comment2.closest(".athing");
-            const comhead = commentElement == null ? void 0 : commentElement.querySelector(".comhead");
-            const user = ((_a = comhead == null ? void 0 : comhead.querySelector(".hnuser")) == null ? void 0 : _a.textContent) || "unknown";
-            const age = ((_b = comhead == null ? void 0 : comhead.querySelector(".age")) == null ? void 0 : _b.textContent) || "";
-            const text = comment2.textContent || "";
-            return { user, age, text };
-          });
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify(comments, null, 2)
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error getting comments: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_load_more",
-      {
-        description: "Click the 'More' link to load more stories",
-        inputSchema: {}
-      },
-      async () => {
-        try {
-          const moreLink = document.querySelector(SELECTORS.MORE_LINK);
-          if (!moreLink) {
-            throw new Error("More link not found");
-          }
-          simulateClick(moreLink);
-          return {
-            content: [{
-              type: "text",
-              text: "Loading more stories..."
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error loading more: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_get_user",
-      {
-        description: "Get user profile information",
-        inputSchema: {
-          username: stringType().describe("The username to look up")
-        }
-      },
-      async (params) => {
-        try {
-          window.location.href = `https://news.ycombinator.com/user?id=${params.username}`;
-          return {
-            content: [{
-              type: "text",
-              text: `Loading profile for user: ${params.username}`
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Error getting user profile: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    server2.registerTool(
-      "hackernews_debug",
-      {
-        description: "Debug tool to check current page state and available elements",
-        inputSchema: {}
-      },
-      async () => {
-        try {
-          const pageInfo = {
-            url: window.location.href,
-            title: document.title,
-            hasStories: document.querySelectorAll(SELECTORS.STORY_ROW).length > 0,
-            storyCount: document.querySelectorAll(SELECTORS.STORY_ROW).length,
-            hasSearchBox: !!document.querySelector(SELECTORS.SEARCH_INPUT),
-            hasComments: document.querySelectorAll(".comment").length > 0,
-            commentCount: document.querySelectorAll(".comment").length,
-            hasMoreLink: !!document.querySelector(SELECTORS.MORE_LINK),
-            navLinks: Array.from(document.querySelectorAll(SELECTORS.NAV_LINKS)).map((a) => ({
-              text: a.textContent,
-              href: a.href
-            }))
-          };
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify(pageInfo, null, 2)
-            }]
-          };
-        } catch (error) {
-          return {
-            content: [{
-              type: "text",
-              text: `Debug error: ${error}`
-            }]
-          };
-        }
-      }
-    );
-    const transport = new h({ allowedOrigins: ["*"] });
-    await server2.connect(transport);
-    console.log("[HackerNews MCP] Server initialized successfully");
+  let hnServer = null;
+  async function ensureServer() {
+    if (!hnServer) {
+      hnServer = new HackerNewsMcpServer();
+      window.hnMcpServer = hnServer;
+    }
   }
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => void setupMcpServer());
+    document.addEventListener("DOMContentLoaded", () => void ensureServer());
   } else {
-    void setupMcpServer();
+    void ensureServer();
   }
-  window.hackernewsMcpServer = { server };
-  console.log("[HackerNews MCP] Script loaded");
+  let lastHref = location.href;
+  const observer = new MutationObserver(() => {
+    if (location.href !== lastHref) {
+      lastHref = location.href;
+      setTimeout(() => void ensureServer(), 500);
+    }
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener("beforeunload", () => {
+  });
+  log("info", "Hacker News MCP Server script loaded");
 
 })();
