@@ -6,12 +6,12 @@ export default defineConfig({
     monkey({
       entry: 'src/index.ts',
       userscript: {
-        name: 'ChatGPT MCP Server',
+        name: '{{displayName}}',
         namespace: 'https://github.com/WebMCP-org/webmcp-userscripts',
-        match: ['https://chatgpt.com/*'],
+        match: ['{{matchPattern}}'],
         version: '1.0.0',
-        description: 'MCP tools for ChatGPT',
-        author: 'WebMCP',
+        description: '{{description}}',
+        author: '{{author}}',
         grant: [
           'GM.info',
           'GM.setValue',
@@ -25,7 +25,7 @@ export default defineConfig({
         supportURL: 'https://github.com/WebMCP-org/webmcp-userscripts/issues',
       },
       build: {
-        fileName: 'chatgpt.user.js',
+        fileName: '{{siteName}}.user.js',
         metaFileName: true,
         autoGrant: true,
       },

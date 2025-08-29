@@ -4709,7 +4709,7 @@
     }
   }
   var _ = ((n) => (n.START = "start", n.STARTED = "started", n.STOP = "stop", n.STOPPED = "stopped", n.PING = "ping", n.PONG = "pong", n.ERROR = "error", n.LIST_TOOLS = "list_tools", n.CALL_TOOL = "call_tool", n.TOOL_LIST_UPDATED = "tool_list_updated", n.TOOL_LIST_UPDATED_ACK = "tool_list_updated_ack", n.PROCESS_DATA = "process_data", n.SERVER_STARTED = "server_started", n.SERVER_STOPPED = "server_stopped", n.ERROR_FROM_NATIVE_HOST = "error_from_native_host", n.CONNECT_NATIVE = "connectNative", n.PING_NATIVE = "ping_native", n.DISCONNECT_NATIVE = "disconnect_native", n))(_ || {});
-  var h = class {
+  var p = class {
     constructor(e) {
       __publicField(this, "_started", false);
       __publicField(this, "_allowedOrigins");
@@ -6487,12 +6487,12 @@
     return v;
   }
   function resolveSchema(root, ref2) {
-    var p = URI$1.parse(ref2), refPath = _getFullPath(p), baseId = getFullPath(this._getId(root.schema));
+    var p2 = URI$1.parse(ref2), refPath = _getFullPath(p2), baseId = getFullPath(this._getId(root.schema));
     if (Object.keys(root.schema).length === 0 || refPath !== baseId) {
       var id = normalizeId(refPath);
       var refVal = this._refs[id];
       if (typeof refVal == "string") {
-        return resolveRecursive.call(this, root, refVal, p);
+        return resolveRecursive.call(this, root, refVal, p2);
       } else if (refVal instanceof SchemaObject$1) {
         if (!refVal.validate) this._compile(refVal);
         root = refVal;
@@ -6510,7 +6510,7 @@
       if (!root.schema) return;
       baseId = getFullPath(this._getId(root.schema));
     }
-    return getJsonPointer.call(this, p, baseId, root.schema, root);
+    return getJsonPointer.call(this, p2, baseId, root.schema, root);
   }
   function resolveRecursive(root, ref2, parsedRef) {
     var res = resolveSchema.call(this, root, ref2);
@@ -6615,11 +6615,11 @@
   }
   function getFullPath(id, normalize) {
     if (normalize !== false) id = normalizeId(id);
-    var p = URI$1.parse(id);
-    return _getFullPath(p);
+    var p2 = URI$1.parse(id);
+    return _getFullPath(p2);
   }
-  function _getFullPath(p) {
-    return URI$1.serialize(p).split("#")[0] + "#";
+  function _getFullPath(p2) {
+    return URI$1.serialize(p2).split("#")[0] + "#";
   }
   var TRAILING_SLASH_HASH = /#\/?$/;
   function normalizeId(id) {
@@ -9240,8 +9240,8 @@
     if ($required && !(it.opts.$data && $required.$data) && $required.length < it.opts.loopRequired) {
       var $requiredHash = it.util.toHash($required);
     }
-    function notProto(p) {
-      return p !== "__proto__";
+    function notProto(p2) {
+      return p2 !== "__proto__";
     }
     out += "var " + $errs + " = errors;var " + $nextValid + " = true;";
     if ($ownProperties) {
@@ -10102,19 +10102,19 @@
       callback = meta;
       meta = void 0;
     }
-    var p = loadMetaSchemaOf(schema).then(function() {
+    var p2 = loadMetaSchemaOf(schema).then(function() {
       var schemaObj = self2._addSchema(schema, void 0, meta);
       return schemaObj.validate || _compileAsync(schemaObj);
     });
     if (callback) {
-      p.then(
+      p2.then(
         function(v) {
           callback(null, v);
         },
         callback
       );
     }
-    return p;
+    return p2;
     function loadMetaSchemaOf(sch) {
       var $schema2 = sch.$schema;
       return $schema2 && !self2.getSchema($schema2) ? compileAsync.call(self2, { $ref: $schema2 }, true) : Promise.resolve();
@@ -13162,15 +13162,25 @@
         },
         async () => this.format(document.title)
       );
-      this.transport = new h({ allowedOrigins: ["*"] });
+      this.transport = new p({ allowedOrigins: ["*"] });
       void this.init();
     }
     format(data2) {
-      return { content: [{ type: "text", text: typeof data2 === "string" ? data2 : JSON.stringify(data2, null, 2) }] };
+      return {
+        content: [
+          {
+            type: "text",
+            text: typeof data2 === "string" ? data2 : JSON.stringify(data2, null, 2)
+          }
+        ]
+      };
     }
     formatError(error) {
       const message = error instanceof Error ? error.message : String(error);
-      return { content: [{ type: "text", text: `Error: ${message}` }], isError: true };
+      return {
+        content: [{ type: "text", text: `Error: ${message}` }],
+        isError: true
+      };
     }
     getSearchQuery() {
       var _a;
@@ -13200,7 +13210,9 @@
     parseSearchResults(maxResults = 10) {
       var _a, _b, _c;
       const results = [];
-      const h3Nodes = Array.from(document.querySelectorAll("div#search a h3"));
+      const h3Nodes = Array.from(
+        document.querySelectorAll("div#search a h3")
+      );
       let index = 0;
       for (const h3 of h3Nodes) {
         const anchor = h3.closest("a");
@@ -13214,7 +13226,13 @@
         const displayedUrlEl = (container == null ? void 0 : container.querySelector("span.TPc9gc, cite, div.BTtC6e, span.VuuXrf")) || anchor.querySelector("cite");
         const displayedUrl = ((_c = displayedUrlEl == null ? void 0 : displayedUrlEl.textContent) == null ? void 0 : _c.trim()) || null;
         index += 1;
-        results.push({ position: index, title: title2 || "Untitled result", url: anchor.href, displayedUrl, snippet });
+        results.push({
+          position: index,
+          title: title2 || "Untitled result",
+          url: anchor.href,
+          displayedUrl,
+          snippet
+        });
         if (results.length >= maxResults) break;
       }
       return results;
@@ -13272,7 +13290,9 @@
             try {
               const query = this.getSearchQuery();
               if (!query) {
-                return this.formatError("No search query detected. Navigate to a results page first.");
+                return this.formatError(
+                  "No search query detected. Navigate to a results page first."
+                );
               }
               const results = this.parseSearchResults(maxResults ?? 10);
               return this.format({ query, results });
@@ -13310,7 +13330,9 @@
           {
             title: "Go To Results Page",
             description: "Navigate to a specific results page number (1-based)",
-            inputSchema: { page: numberType().int().min(1).describe("Results page number, starting at 1") },
+            inputSchema: {
+              page: numberType().int().min(1).describe("Results page number, starting at 1")
+            },
             annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true }
           },
           async ({ page }) => {

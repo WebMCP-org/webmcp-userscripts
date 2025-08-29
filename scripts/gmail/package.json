@@ -13,7 +13,8 @@
     "@modelcontextprotocol/sdk": "^1.17.0",
     "@mcp-b/transports": "^1.0.2",
     "gmail-js": "^1.1.16",
-    "jquery": "^4.0.0-beta.2"
+    "jquery": "^4.0.0-beta.2",
+    "@webmcp-userscripts/shared": "workspace:*"
   },
   "devDependencies": {
     "vite": "^5.1.6",
