@@ -3,10 +3,29 @@ import { z } from 'zod';
 
 // This module manages inbox/list view tools
 // IMPORTANT: Tools are only registered based on Gmail UI state, never by other tools
-export function setupInboxObserver() {
-  // Track selection state
-  let hasSelectedEmails = false;
 
+// Track selection state (module level for access from tools)
+let hasSelectedEmails = false;
+
+// Monitor selection state changes (module level for access from tools)
+function monitorSelectionState() {
+  const checkboxes = document.querySelectorAll('[role="checkbox"][aria-label*="Select"]:checked');
+  const newHasSelection = checkboxes.length > 0;
+  
+  if (newHasSelection !== hasSelectedEmails) {
+    hasSelectedEmails = newHasSelection;
+    
+    if (hasSelectedEmails) {
+      // Register bulk action tools when emails are selected
+      registerBulkActionTools();
+    } else {
+      // Clean up bulk action tools when no emails are selected
+      cleanupBulkTools();
+    }
+  }
+}
+
+export function setupInboxObserver() {
   // Initial setup
   detectAndSetupInbox();
 
@@ -35,24 +54,6 @@ export function setupInboxObserver() {
   window.gmail.observe.on('move_to_inbox', () => {
     detectAndSetupInbox();
   });
-
-  // Monitor selection state changes
-  function monitorSelectionState() {
-    const checkboxes = document.querySelectorAll('[role="checkbox"][aria-label*="Select"]:checked');
-    const newHasSelection = checkboxes.length > 0;
-    
-    if (newHasSelection !== hasSelectedEmails) {
-      hasSelectedEmails = newHasSelection;
-      
-      if (hasSelectedEmails) {
-        // Register bulk action tools when emails are selected
-        registerBulkActionTools();
-      } else {
-        // Clean up bulk action tools when no emails are selected
-        cleanupBulkTools();
-      }
-    }
-  }
 
   // Set up mutation observer to watch for selection changes
   const observer = new MutationObserver(() => {
@@ -232,7 +233,9 @@ function setupInboxTools() {
           const selectAllBox = document.querySelector('[aria-label*="Select all"], [aria-label*="select all"]') as HTMLElement;
           if (selectAllBox) {
             selectAllBox.click();
-            // Bulk action tools will be registered by selection state monitor
+            // Wait for DOM update and manually trigger selection state check
+            await new Promise(resolve => setTimeout(resolve, 100));
+            monitorSelectionState();
             return formatSuccess(`Selected all ${checkboxes.length} visible emails`);
           } else {
             // Fallback: Select each checkbox individually
@@ -244,6 +247,9 @@ function setupInboxTools() {
                 selectedCount++;
               }
             });
+            // Wait for DOM update and manually trigger selection state check
+            await new Promise(resolve => setTimeout(resolve, 100));
+            monitorSelectionState();
             return formatSuccess(`Selected ${selectedCount} emails individually (select all button not found)`);
           }
         }
@@ -263,7 +269,9 @@ function setupInboxTools() {
             }
           });
 
-          // Bulk action tools will be registered by selection state monitor
+          // Wait for DOM update and manually trigger selection state check
+          await new Promise(resolve => setTimeout(resolve, 100));
+          monitorSelectionState();
           return formatSuccess(`Selected ${selectedCount} emails (indices: ${indices.join(', ')})`);
         }
 
@@ -274,6 +282,41 @@ function setupInboxTools() {
     }
   );
   inboxTools.add(selectTool);
+
+  // Deselect Emails Tool
+  const deselectTool = window.server.registerTool(
+    'gmail_deselect_emails',
+    {
+      title: 'Deselect Emails',
+      description: 'Deselect all currently selected emails',
+      inputSchema: {},
+    },
+    async () => {
+      try {
+        const checkedBoxes = document.querySelectorAll('[role="checkbox"][aria-checked="true"]');
+        let deselectedCount = 0;
+        
+        checkedBoxes.forEach((checkbox) => {
+          const cb = checkbox as HTMLElement;
+          // Skip the select all checkbox
+          const label = cb.getAttribute('aria-label') || '';
+          if (!label.toLowerCase().includes('select all')) {
+            cb.click();
+            deselectedCount++;
+          }
+        });
+        
+        // Wait for DOM update and manually trigger selection state check
+        await new Promise(resolve => setTimeout(resolve, 100));
+        monitorSelectionState();
+        
+        return formatSuccess(`Deselected ${deselectedCount} emails`);
+      } catch (error) {
+        return formatError('Failed to deselect emails', error);
+      }
+    }
+  );
+  inboxTools.add(deselectTool);
 
   // Compose New Email Tool
   const composeTool = window.server.registerTool(

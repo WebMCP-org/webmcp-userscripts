@@ -75,42 +75,88 @@ function registerReadEmailTool(domEmail: GmailDomEmail) {
     },
     async () => {
       try {
-        // Use the new Gmail.js API only
-        const emailId = window.gmail.new.get.email_id(domEmail.$el[0]);
-        const emailData = emailId ? window.gmail.new.get.email_data(emailId) : null;
-        
-        if (!emailData) {
-          return formatError('Could not retrieve email data');
-        }
-        
+        // Use a combination of DOM methods and new API
+        // The domEmail object itself has built-in methods for accessing email data
+
+        // Get the body from the DOM directly
+        const body = domEmail.body();
         const attachments = domEmail.attachments();
 
-        return formatSuccess('Email content retrieved', {
-          id: emailData.id,
-          legacy_email_id: emailData.legacy_email_id,
-          thread_id: emailData.thread_id,
-          subject: emailData.subject,
-          from: emailData.from.address,
-          from_name: emailData.from.name,
-          from_email: emailData.from.address,
-          to: emailData.to.map(t => t.address),
-          to_details: emailData.to,
-          cc: emailData.cc.map(c => c.address),
-          cc_details: emailData.cc,
-          bcc: emailData.bcc.map(b => b.address),
-          bcc_details: emailData.bcc,
-          date: emailData.date.toISOString(),
-          timestamp: emailData.timestamp,
-          body: domEmail.body(),
-          body_html: emailData.content_html,
+        // Try to get additional data from the new API
+        let emailId = window.gmail.new.get.email_id(domEmail);
+
+        if (!emailId) {
+          // Fallback: try with the DOM element
+          emailId = window.gmail.new.get.email_id(domEmail.$el[0]);
+        }
+
+        let emailData = null;
+        if (emailId) {
+          emailData = window.gmail.new.get.email_data(emailId);
+        }
+
+        // If we have cached email data, use it for complete info
+        if (emailData) {
+          return formatSuccess('Email content retrieved', {
+            id: emailData.id,
+            legacy_email_id: emailData.legacy_email_id,
+            thread_id: emailData.thread_id,
+            subject: emailData.subject,
+            from: emailData.from.address,
+            from_name: emailData.from.name,
+            from_email: emailData.from.address,
+            to: emailData.to.map(t => t.address),
+            to_details: emailData.to,
+            cc: emailData.cc.map(c => c.address),
+            cc_details: emailData.cc,
+            bcc: emailData.bcc.map(b => b.address),
+            bcc_details: emailData.bcc,
+            date: emailData.date.toISOString(),
+            timestamp: emailData.timestamp,
+            body: body,
+            body_html: emailData.content_html,
+            is_draft: emailData.is_draft
+          });
+        }
+
+        // Fallback: Use DOM-only data if cache data is not available
+        // According to docs, gmail.dom.email has a .data() method that fetches from server
+        const domEmailWrapper = window.gmail.dom.email(domEmail.$el[0]);
+        const serverData = domEmailWrapper.data();
+
+        if (serverData) {
+          return formatSuccess('Email content retrieved from server', {
+            thread_id: serverData.thread_id,
+            subject: serverData.subject,
+            from: serverData.from_email,
+            from_name: serverData.from,
+            to: serverData.to || [],
+            cc: serverData.cc || [],
+            bcc: serverData.bcc || [],
+            timestamp: serverData.timestamp,
+            datetime: serverData.datetime,
+            body: body,
+            body_plain: serverData.content_plain,
+            body_html: serverData.content_html,
+            attachments: attachments && attachments.length > 0 ? attachments.map((a) => ({
+              name: a.name,
+              type: a.type,
+              url: a.url,
+              size: a.size
+            })) : [],
+            // attachment_details: serverData.attachments_details || []
+          });
+        }
+
+        // Ultimate fallback: just return what we can get from DOM
+        return formatSuccess('Email content retrieved from DOM', {
+          body: body,
           attachments: attachments && attachments.length > 0 ? attachments.map((a) => ({
             name: a.name,
             type: a.type,
             url: a.url,
             size: a.size
-          })) : [],
-          attachment_details: emailData.attachments,
-          is_draft: emailData.is_draft
+          })) : []
         });
       } catch (error) {
         return formatError('Failed to read email', error);
@@ -144,7 +190,7 @@ function registerDraftReplyTool(domEmail: GmailDomEmail) {
 
         // Method 1: Try the standard class selectors
         const buttonClass = replyAll ? '.aaq' : '.aar';
-        const buttons = domEmail.$el.find(buttonClass);
+        const buttons = domEmail.$el.find(buttonClass) ?? [];
         if (buttons && buttons.length > 0) {
           button = buttons[0] as HTMLElement;
         }
@@ -153,7 +199,7 @@ function registerDraftReplyTool(domEmail: GmailDomEmail) {
         if (!button) {
           const searchTerm = replyAll ? 'reply all' : 'reply';
           // jQuery doesn't support case-insensitive attribute selectors, check both cases
-          const ariaButtons = domEmail.$el.find(`[aria-label*="${searchTerm}"], [aria-label*="${searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1)}"]`);
+          const ariaButtons = domEmail.$el.find(`[aria-label*="${searchTerm}"], [aria-label*="${searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1)}"]`) ?? [];
           if (ariaButtons && ariaButtons.length > 0) {
             button = ariaButtons[0] as HTMLElement;
           }
@@ -162,7 +208,7 @@ function registerDraftReplyTool(domEmail: GmailDomEmail) {
         // Method 3: Look for button by data-tooltip
         if (!button) {
           const searchTerm = replyAll ? 'Reply all' : 'Reply';
-          const tooltipButtons = domEmail.$el.find(`[data-tooltip="${searchTerm}"]`);
+          const tooltipButtons = domEmail.$el.find(`[data-tooltip="${searchTerm}"]`) ?? [];
           if (tooltipButtons && tooltipButtons.length > 0) {
             button = tooltipButtons[0] as HTMLElement;
           }
@@ -183,7 +229,7 @@ function registerDraftReplyTool(domEmail: GmailDomEmail) {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           // Verify the compose window opened
-          const composes = window.gmail.dom.composes();
+          const composes = window.gmail.dom.composes() ?? [];
           const composeObj = composes[composes.length - 1];
 
           if (!composeObj) {
@@ -209,7 +255,7 @@ function registerDraftReplyTool(domEmail: GmailDomEmail) {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Verify the compose window opened
-        const composes = window.gmail.dom.composes();
+        const composes = window.gmail.dom.composes() ?? [];
         const composeObj = composes[composes.length - 1];
 
         if (!composeObj) {
@@ -252,7 +298,7 @@ function registerForwardEmailTool(domEmail: GmailDomEmail) {
         let forwardButton: HTMLElement | null = null;
 
         // Method 1: Try the standard class selector
-        const forwardButtons = domEmail.$el.find('.aaw');
+        const forwardButtons = domEmail.$el.find('.aaw') ?? [];
         if (forwardButtons && forwardButtons.length > 0) {
           forwardButton = forwardButtons[0] as HTMLElement;
         }
@@ -260,7 +306,7 @@ function registerForwardEmailTool(domEmail: GmailDomEmail) {
         // Method 2: Look for button by aria-label
         if (!forwardButton) {
           // jQuery doesn't support case-insensitive attribute selectors, check both cases
-          const ariaButtons = domEmail.$el.find('[aria-label*="forward"], [aria-label*="Forward"]');
+          const ariaButtons = domEmail.$el.find('[aria-label*="forward"], [aria-label*="Forward"]') ?? [];
           if (ariaButtons && ariaButtons.length > 0) {
             forwardButton = ariaButtons[0] as HTMLElement;
           }
@@ -268,7 +314,7 @@ function registerForwardEmailTool(domEmail: GmailDomEmail) {
 
         // Method 3: Look for button by data-tooltip
         if (!forwardButton) {
-          const tooltipButtons = domEmail.$el.find('[data-tooltip="Forward"]');
+          const tooltipButtons = domEmail.$el.find('[data-tooltip="Forward"]') ?? [];
           if (tooltipButtons && tooltipButtons.length > 0) {
             forwardButton = tooltipButtons[0] as HTMLElement;
           }
@@ -289,7 +335,7 @@ function registerForwardEmailTool(domEmail: GmailDomEmail) {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           // Verify the compose window opened
-          const composes = window.gmail.dom.composes();
+          const composes = window.gmail.dom.composes() ?? [];
           const composeObj = composes[composes.length - 1];
 
           if (!composeObj) {
@@ -315,7 +361,7 @@ function registerForwardEmailTool(domEmail: GmailDomEmail) {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Verify the compose window opened
-        const composes = window.gmail.dom.composes();
+        const composes = window.gmail.dom.composes() ?? [];
         const composeObj = composes[composes.length - 1];
 
         if (!composeObj) {

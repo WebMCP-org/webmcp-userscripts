@@ -19596,38 +19596,71 @@ ${JSON.stringify(data2, null, 2)}` : message
           },
           async () => {
             try {
-              const emailId = window.gmail.new.get.email_id(domEmail.$el[0]);
-              const emailData = emailId ? window.gmail.new.get.email_data(emailId) : null;
-              if (!emailData) {
-                return formatError("Could not retrieve email data");
-              }
+              const body = domEmail.body();
               const attachments = domEmail.attachments();
-              return formatSuccess("Email content retrieved", {
-                id: emailData.id,
-                legacy_email_id: emailData.legacy_email_id,
-                thread_id: emailData.thread_id,
-                subject: emailData.subject,
-                from: emailData.from.address,
-                from_name: emailData.from.name,
-                from_email: emailData.from.address,
-                to: emailData.to.map((t) => t.address),
-                to_details: emailData.to,
-                cc: emailData.cc.map((c) => c.address),
-                cc_details: emailData.cc,
-                bcc: emailData.bcc.map((b) => b.address),
-                bcc_details: emailData.bcc,
-                date: emailData.date.toISOString(),
-                timestamp: emailData.timestamp,
-                body: domEmail.body(),
-                body_html: emailData.content_html,
+              let emailId = window.gmail.new.get.email_id(domEmail);
+              if (!emailId) {
+                emailId = window.gmail.new.get.email_id(domEmail.$el[0]);
+              }
+              let emailData = null;
+              if (emailId) {
+                emailData = window.gmail.new.get.email_data(emailId);
+              }
+              if (emailData) {
+                return formatSuccess("Email content retrieved", {
+                  id: emailData.id,
+                  legacy_email_id: emailData.legacy_email_id,
+                  thread_id: emailData.thread_id,
+                  subject: emailData.subject,
+                  from: emailData.from.address,
+                  from_name: emailData.from.name,
+                  from_email: emailData.from.address,
+                  to: emailData.to.map((t) => t.address),
+                  to_details: emailData.to,
+                  cc: emailData.cc.map((c) => c.address),
+                  cc_details: emailData.cc,
+                  bcc: emailData.bcc.map((b) => b.address),
+                  bcc_details: emailData.bcc,
+                  date: emailData.date.toISOString(),
+                  timestamp: emailData.timestamp,
+                  body,
+                  body_html: emailData.content_html,
+                  is_draft: emailData.is_draft
+                });
+              }
+              const domEmailWrapper = window.gmail.dom.email(domEmail.$el[0]);
+              const serverData = domEmailWrapper.data();
+              if (serverData) {
+                return formatSuccess("Email content retrieved from server", {
+                  thread_id: serverData.thread_id,
+                  subject: serverData.subject,
+                  from: serverData.from_email,
+                  from_name: serverData.from,
+                  to: serverData.to || [],
+                  cc: serverData.cc || [],
+                  bcc: serverData.bcc || [],
+                  timestamp: serverData.timestamp,
+                  datetime: serverData.datetime,
+                  body,
+                  body_plain: serverData.content_plain,
+                  body_html: serverData.content_html,
+                  attachments: attachments && attachments.length > 0 ? attachments.map((a) => ({
+                    name: a.name,
+                    type: a.type,
+                    url: a.url,
+                    size: a.size
+                  })) : []
+                  // attachment_details: serverData.attachments_details || []
+                });
+              }
+              return formatSuccess("Email content retrieved from DOM", {
+                body,
                 attachments: attachments && attachments.length > 0 ? attachments.map((a) => ({
                   name: a.name,
                   type: a.type,
                   url: a.url,
                   size: a.size
-                })) : [],
-                attachment_details: emailData.attachments,
-                is_draft: emailData.is_draft
+                })) : []
               });
             } catch (error) {
               return formatError("Failed to read email", error);
@@ -19654,20 +19687,20 @@ ${JSON.stringify(data2, null, 2)}` : message
               }
               let button = null;
               const buttonClass = replyAll ? ".aaq" : ".aar";
-              const buttons = domEmail.$el.find(buttonClass);
+              const buttons = domEmail.$el.find(buttonClass) ?? [];
               if (buttons && buttons.length > 0) {
                 button = buttons[0];
               }
               if (!button) {
                 const searchTerm = replyAll ? "reply all" : "reply";
-                const ariaButtons = domEmail.$el.find(`[aria-label*="${searchTerm}"], [aria-label*="${searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1)}"]`);
+                const ariaButtons = domEmail.$el.find(`[aria-label*="${searchTerm}"], [aria-label*="${searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1)}"]`) ?? [];
                 if (ariaButtons && ariaButtons.length > 0) {
                   button = ariaButtons[0];
                 }
               }
               if (!button) {
                 const searchTerm = replyAll ? "Reply all" : "Reply";
-                const tooltipButtons = domEmail.$el.find(`[data-tooltip="${searchTerm}"]`);
+                const tooltipButtons = domEmail.$el.find(`[data-tooltip="${searchTerm}"]`) ?? [];
                 if (tooltipButtons && tooltipButtons.length > 0) {
                   button = tooltipButtons[0];
                 }
@@ -19682,7 +19715,7 @@ ${JSON.stringify(data2, null, 2)}` : message
                 });
                 document.dispatchEvent(event);
                 await new Promise((resolve2) => setTimeout(resolve2, 1e3));
-                const composes2 = window.gmail.dom.composes();
+                const composes2 = window.gmail.dom.composes() ?? [];
                 const composeObj2 = composes2[composes2.length - 1];
                 if (!composeObj2) {
                   return formatError("Compose window did not open via keyboard shortcut");
@@ -19700,7 +19733,7 @@ ${JSON.stringify(data2, null, 2)}` : message
               }
               button.click();
               await new Promise((resolve2) => setTimeout(resolve2, 100));
-              const composes = window.gmail.dom.composes();
+              const composes = window.gmail.dom.composes() ?? [];
               const composeObj = composes[composes.length - 1];
               if (!composeObj) {
                 return formatError("Compose window did not open");
@@ -19733,18 +19766,18 @@ ${JSON.stringify(data2, null, 2)}` : message
                 return formatError("Email element not found or not ready");
               }
               let forwardButton = null;
-              const forwardButtons = domEmail.$el.find(".aaw");
+              const forwardButtons = domEmail.$el.find(".aaw") ?? [];
               if (forwardButtons && forwardButtons.length > 0) {
                 forwardButton = forwardButtons[0];
               }
               if (!forwardButton) {
-                const ariaButtons = domEmail.$el.find('[aria-label*="forward"], [aria-label*="Forward"]');
+                const ariaButtons = domEmail.$el.find('[aria-label*="forward"], [aria-label*="Forward"]') ?? [];
                 if (ariaButtons && ariaButtons.length > 0) {
                   forwardButton = ariaButtons[0];
                 }
               }
               if (!forwardButton) {
-                const tooltipButtons = domEmail.$el.find('[data-tooltip="Forward"]');
+                const tooltipButtons = domEmail.$el.find('[data-tooltip="Forward"]') ?? [];
                 if (tooltipButtons && tooltipButtons.length > 0) {
                   forwardButton = tooltipButtons[0];
                 }
@@ -19759,7 +19792,7 @@ ${JSON.stringify(data2, null, 2)}` : message
                 });
                 document.dispatchEvent(event);
                 await new Promise((resolve2) => setTimeout(resolve2, 1e3));
-                const composes2 = window.gmail.dom.composes();
+                const composes2 = window.gmail.dom.composes() ?? [];
                 const composeObj2 = composes2[composes2.length - 1];
                 if (!composeObj2) {
                   return formatError("Compose window did not open via keyboard shortcut");
@@ -19776,7 +19809,7 @@ ${JSON.stringify(data2, null, 2)}` : message
               }
               forwardButton.click();
               await new Promise((resolve2) => setTimeout(resolve2, 100));
-              const composes = window.gmail.dom.composes();
+              const composes = window.gmail.dom.composes() ?? [];
               const composeObj = composes[composes.length - 1];
               if (!composeObj) {
                 return formatError("Compose window did not open");
@@ -19917,8 +19950,20 @@ ${JSON.stringify(data2, null, 2)}` : message
         );
         globalTools.add(contextTool);
       }
+      let hasSelectedEmails = false;
+      function monitorSelectionState() {
+        const checkboxes = document.querySelectorAll('[role="checkbox"][aria-label*="Select"]:checked');
+        const newHasSelection = checkboxes.length > 0;
+        if (newHasSelection !== hasSelectedEmails) {
+          hasSelectedEmails = newHasSelection;
+          if (hasSelectedEmails) {
+            registerBulkActionTools();
+          } else {
+            cleanupBulkTools();
+          }
+        }
+      }
       function setupInboxObserver() {
-        let hasSelectedEmails = false;
         detectAndSetupInbox();
         window.addEventListener("hashchange", function() {
           const currentPage = window.gmail.get.current_page();
@@ -19936,18 +19981,6 @@ ${JSON.stringify(data2, null, 2)}` : message
         window.gmail.observe.on("move_to_inbox", () => {
           detectAndSetupInbox();
         });
-        function monitorSelectionState() {
-          const checkboxes = document.querySelectorAll('[role="checkbox"][aria-label*="Select"]:checked');
-          const newHasSelection = checkboxes.length > 0;
-          if (newHasSelection !== hasSelectedEmails) {
-            hasSelectedEmails = newHasSelection;
-            if (hasSelectedEmails) {
-              registerBulkActionTools();
-            } else {
-              cleanupBulkTools();
-            }
-          }
-        }
         const observer = new MutationObserver(() => {
           monitorSelectionState();
         });
@@ -20084,6 +20117,8 @@ ${JSON.stringify(data2, null, 2)}` : message
                 const selectAllBox = document.querySelector('[aria-label*="Select all"], [aria-label*="select all"]');
                 if (selectAllBox) {
                   selectAllBox.click();
+                  await new Promise((resolve2) => setTimeout(resolve2, 100));
+                  monitorSelectionState();
                   return formatSuccess(`Selected all ${checkboxes.length} visible emails`);
                 } else {
                   let selectedCount = 0;
@@ -20094,6 +20129,8 @@ ${JSON.stringify(data2, null, 2)}` : message
                       selectedCount++;
                     }
                   });
+                  await new Promise((resolve2) => setTimeout(resolve2, 100));
+                  monitorSelectionState();
                   return formatSuccess(`Selected ${selectedCount} emails individually (select all button not found)`);
                 }
               }
@@ -20110,6 +20147,8 @@ ${JSON.stringify(data2, null, 2)}` : message
                     }
                   }
                 });
+                await new Promise((resolve2) => setTimeout(resolve2, 100));
+                monitorSelectionState();
                 return formatSuccess(`Selected ${selectedCount} emails (indices: ${indices.join(", ")})`);
               }
               return formatError("No indices provided for selection");
@@ -20119,6 +20158,34 @@ ${JSON.stringify(data2, null, 2)}` : message
           }
         );
         inboxTools.add(selectTool);
+        const deselectTool = window.server.registerTool(
+          "gmail_deselect_emails",
+          {
+            title: "Deselect Emails",
+            description: "Deselect all currently selected emails",
+            inputSchema: {}
+          },
+          async () => {
+            try {
+              const checkedBoxes = document.querySelectorAll('[role="checkbox"][aria-checked="true"]');
+              let deselectedCount = 0;
+              checkedBoxes.forEach((checkbox) => {
+                const cb = checkbox;
+                const label = cb.getAttribute("aria-label") || "";
+                if (!label.toLowerCase().includes("select all")) {
+                  cb.click();
+                  deselectedCount++;
+                }
+              });
+              await new Promise((resolve2) => setTimeout(resolve2, 100));
+              monitorSelectionState();
+              return formatSuccess(`Deselected ${deselectedCount} emails`);
+            } catch (error) {
+              return formatError("Failed to deselect emails", error);
+            }
+          }
+        );
+        inboxTools.add(deselectTool);
         const composeTool = window.server.registerTool(
           "gmail_compose_new",
           {
