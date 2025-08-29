@@ -13138,24 +13138,40 @@
       hasMore: false
     }
   };
-  async function createServer(config2) {
+  function createServer(config2) {
     const server2 = new McpServer(
       {
         name: config2.name,
         version: config2.version
       },
       {
-        capabilities: config2.capabilities || {
+        capabilities: {
           tools: { listChanged: true }
-        },
-        ...config2.instructions && { instructions: config2.instructions }
+        }
+      }
+    );
+    server2.registerTool(
+      "ping",
+      {
+        description: "Ping the server",
+        inputSchema: {}
+      },
+      async () => {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Pong from ${window.location.href}`
+            }
+          ]
+        };
       }
     );
     const transport = new p$1({
       allowedOrigins: ["*"]
     });
     try {
-      await server2.connect(transport);
+      server2.connect(transport);
       console.log(`[${config2.name}] MCP Server initialized`);
       return server2;
     } catch (error) {

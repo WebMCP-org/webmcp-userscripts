@@ -3,24 +3,40 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import userEvent from '@testing-library/user-event';
 
 // src/server.ts
-async function createServer(config) {
+function createServer(config) {
   const server = new McpServer(
     {
       name: config.name,
       version: config.version
     },
     {
-      capabilities: config.capabilities || {
+      capabilities: {
         tools: { listChanged: true }
-      },
-      ...config.instructions && { instructions: config.instructions }
+      }
+    }
+  );
+  server.registerTool(
+    "ping",
+    {
+      description: "Ping the server",
+      inputSchema: {}
+    },
+    async () => {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Pong from ${window.location.href}`
+          }
+        ]
+      };
     }
   );
   const transport = new TabServerTransport({
     allowedOrigins: ["*"]
   });
   try {
-    await server.connect(transport);
+    server.connect(transport);
     console.log(`[${config.name}] MCP Server initialized`);
     return server;
   } catch (error) {

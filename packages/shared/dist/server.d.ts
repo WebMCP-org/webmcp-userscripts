@@ -8,7 +8,7 @@ interface ServerConfig {
     instructions?: string;
     capabilities?: ServerCapabilities;
 }
-declare function createServer(config: ServerConfig): Promise<McpServer>;
+declare function createServer(config: ServerConfig): McpServer;
 declare function formatSuccess(message: string, data?: any): any;
 declare function formatError(message: string, error?: any): any;
 

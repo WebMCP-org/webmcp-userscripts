@@ -1,7 +1,6 @@
 {
-  "root": false,
+  "root": true,
   "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -53,16 +52,5 @@
     "formatter": {
       "indentWidth": 2
     }
-  },
-  "files": {
-    "includes": [
-      "**",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/build",
-      "!**/*.user.js",
-      "!**/*.meta.js",
-      "!**/coverage"
-    ]
   }
 }

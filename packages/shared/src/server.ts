@@ -10,17 +10,16 @@ export interface ServerConfig {
   capabilities?: ServerCapabilities;
 }
 
-export async function createServer(config: ServerConfig): Promise<McpServer> {
+export function createServer(config: ServerConfig): McpServer {
   const server = new McpServer(
     {
       name: config.name,
       version: config.version,
     },
     {
-      capabilities: config.capabilities || {
+      capabilities: {
         tools: { listChanged: true },
       },
-      ...(config.instructions && { instructions: config.instructions }),
     }
   );
 
@@ -29,7 +28,6 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
       description: 'Ping the server',
       inputSchema: {},
     },
-
     async () => {
       return {
         content: [
@@ -47,7 +45,7 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
   });
 
   try {
-    await server.connect(transport);
+    server.connect(transport);
     console.log(`[${config.name}] MCP Server initialized`);
     return server;
   } catch (error) {

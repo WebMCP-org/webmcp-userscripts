@@ -78,13 +78,13 @@ server.registerTool(
 The shared library includes @testing-library/user-event for realistic user interactions:
 
 ```typescript
-import { 
-  clickElement, 
-  typeText, 
+import {
+  clickElement,
+  typeText,
   selectOption,
   waitForSelector,
   getAllElements,
-  getElementText 
+  getElementText
 } from '@webmcp-userscripts/shared/dom';
 
 // Click an element
@@ -191,10 +191,10 @@ server.registerTool(
   async ({ query }) => {
     const typed = await typeText('[data-target="query-input"]', query);
     if (!typed) return formatError('Could not find search input');
-    
+
     const clicked = await clickElement('[type="submit"]');
     if (!clicked) return formatError('Could not submit search');
-    
+
     return formatSuccess('Search submitted');
   }
 );
@@ -203,14 +203,14 @@ server.registerTool(
   'github_list_repos',
   {
     description: 'List repositories on current page',
-    inputSchema: z.object({}),
+    inputSchema: {},
   },
   async () => {
     const repos = getAllElements('.repo-list-item').map(el => ({
       name: el.querySelector('h3')?.textContent?.trim(),
       description: el.querySelector('p')?.textContent?.trim(),
     }));
-    
+
     return formatSuccess('Repositories', repos);
   }
 );
