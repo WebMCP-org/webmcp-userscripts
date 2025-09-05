@@ -8,9 +8,6 @@
 // @homepageURL  https://github.com/miguelspizza/mcp-b-user-scripts
 // @supportURL   https://github.com/miguelspizza/mcp-b-user-scripts/issues
 // @match        https://mail.google.com/*
-// @require      https://cdn.jsdelivr.net/npm/systemjs@6.15.1/dist/system.min.js
-// @require      https://cdn.jsdelivr.net/npm/systemjs@6.15.1/dist/extras/named-register.min.js
-// @require      data:application/javascript,%3B(typeof%20System!%3D'undefined')%26%26(System%3Dnew%20System.constructor())%3B
 // @grant        GM.deleteValue
 // @grant        GM.getValue
 // @grant        GM.info

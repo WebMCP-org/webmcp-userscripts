@@ -28,6 +28,8 @@ declare global {
 
 type Context = 'inbox' | 'email-view' | 'compose' | 'global';
 
+
+(async () => {
 (window).$ = window.$ || $;
 (window).jQuery = window.jQuery || $;
 
@@ -47,7 +49,7 @@ window._cleanupTools = (contextsToClean?: Context[]) => {
   // If specific contexts are provided, only clean those
   // Otherwise, clean all non-global contexts
   const contextList = contextsToClean || ['inbox', 'email-view', 'compose'];
-  
+
   contextList.forEach(context => {
     if (context !== 'global') {
       const tools = window._registeredTools.get(context);
@@ -76,3 +78,4 @@ window.gmail.observe.on('load', () => {
 });
 
 log('info', 'Gmail MCP Server v2.0 loaded');
+})();

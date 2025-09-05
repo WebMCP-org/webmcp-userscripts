@@ -40,5 +40,15 @@ export default defineConfig({
   ],
   build: {
     minify: false,
+    rollupOptions: {
+      output: {
+        format: 'iife',
+        inlineDynamicImports: true,
+      },
+      external: [], // Bundle everything, no external dependencies
+    },
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 });
